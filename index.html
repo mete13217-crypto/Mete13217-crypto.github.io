@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ROARING SINS | ULTIMATE</title>
+    <style>
+        @font-face { font-family: 'Pixel'; src: url('https://fonts.cdnfonts.com/s/16218/DeterminationMonoWeb.woff') format('woff'); }
+        :root { --soul: #ff0000; --bg: #000000; --msg-bot: #1a1a1a; --border: #333; }
+        
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: white; font-family: 'Pixel', sans-serif; overflow: hidden; }
+        
+        /* GİRİŞ EKRANI */
+        #intro-screen { position: fixed; inset: 0; z-index: 100; background: black; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 1s; }
+        .gaster-text { color: white; text-align: center; max-width: 80%; margin-bottom: 20px; font-size: 1.2rem; min-height: 100px; }
+        .input-name { background: none; border: none; border-bottom: 2px solid white; color: white; font-family: 'Pixel'; font-size: 1.5rem; text-align: center; outline: none; margin-bottom: 20px; }
+
+        /* ANA PANEL */
+        #game-container { display: none; height: 100vh; flex-direction: column; }
+        #top-nav { height: 50px; border-bottom: 2px solid var(--soul); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; background: #0a0a0a; }
+        
+        /* KARAKTER SEÇİMİ */
+        #select-screen { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .char-card { border: 2px solid #222; border-radius: 8px; overflow: hidden; position: relative; cursor: pointer; transition: 0.3s; background: #050505; }
+        .char-card:hover { border-color: var(--soul); transform: translateY(-5px); }
+        .char-card img { width: 100%; height: 150px; object-fit: cover; opacity: 0.7; }
+        .char-info { padding: 10px; background: rgba(0,0,0,0.8); }
+
+        /* CHAT EKRANI */
+        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; background: linear-gradient(to bottom, #000, #0a0505); }
+        .msg { max-width: 85%; padding: 12px; border-radius: 4px; position: relative; animation: fadeIn 0.4s; line-height: 1.4; border-left: 4px solid transparent; }
+        .bot { background: var(--msg-bot); align-self: flex-start; border-left-color: #555; }
+        .user { background: #330000; align-self: flex-end; border-right: 4px solid var(--soul); }
+        
+        /* FOTOĞRAF ÇERÇEVESİ */
+        .photo-frame { margin-top: 10px; border: 4px double #fff; padding: 5px; background: #000; display: inline-block; max-width: 100%; }
+        .photo-frame img { max-width: 100%; border-radius: 2px; display: block; }
+
+        /* KONTROLLER */
+        .control-panel { background: #000; border-top: 2px solid #222; padding: 15px; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        #userInput { flex: 1; background: #111; border: 1px solid #444; color: white; padding: 12px; font-family: 'Pixel'; border-radius: 4px; }
+        .action-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .btn { padding: 8px; background: #111; border: 1px solid #444; color: #aaa; font-family: 'Pixel'; font-size: 0.7rem; cursor: pointer; }
+        .btn:hover { background: #222; color: white; }
+        .btn-special { color: var(--soul); border-color: var(--soul); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div id="intro-screen">
+    <div class="gaster-text" id="introText">...<br>KARANLIK.<br>DAHA DA KARANLIK.</div>
+    <input type="text" id="playerName" class="input-name" placeholder="İSMİNİZİ GİRİN" maxlength="12">
+    <button class="btn" onclick="startGame()" style="padding: 10px 30px; border-color: white; color: white;">BAŞLA</button>
+</div>
+
+<div id="game-container">
+    <div id="top-nav">
+        <span id="display-name">OYUNCU</span>
+        <span style="color:red">LV 19</span>
+        <button class="btn" onclick="location.reload()">MENÜ</button>
+    </div>
+
+    <div id="select-screen">
+        </div>
+
+    <div id="play-screen" style="display:none; flex:1; flex-direction:column;">
+        <div id="chat-window"></div>
+        <div class="control-panel">
+            <div class="input-row">
+                <input type="text" id="userInput" placeholder="Bir mesaj yaz...">
+                <button class="btn" onclick="sendMessage()" style="width:50px; background:var(--soul); color:white;">SEND</button>
+            </div>
+            <div class="action-btns">
+                <button class="btn" onclick="quickAction('HAYRANLIK')">İLTİFAT ET</button>
+                <button class="btn" onclick="quickAction('DOKUN')">ELİNİ TUT</button>
+                <button class="btn btn-special" onclick="requestPhoto()">FOTOĞRAF İSTE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let userName = "RUH";
+let currentPartner = null;
+
+const characters = [
+    { 
+        id: 'kris', name: 'Kris', 
+        img: 'https://i.ibb.co/L6S9f3F/kris.jpg', // Buraya ilk attığın Kris resmini koyabilirsin
+        intro: "Sessiz çocuk. İçindeki ruhun esiri mi yoksa efendisi mi olduğu bilinmiyor.",
+        responses: ["...", "* Kris sadece sana bakıyor.", "* Kris bıçağını cebine sakladı.", "* Kris elini tutmana izin veriyor ama titriyor."]
+    },
+    { 
+        id: 'ralsei', name: 'Ralsei', 
+        img: 'https://i.ibb.co/M738S6B/ralsei.jpg', 
+        intro: "Karanlığın prensi. Yalnızlığı biliyor ve seni her ne olursa olsun seveceğine yemin etti.",
+        responses: ["Oh! Bu çok nazikçe!", "Sana her zaman destek olacağım.", "Lütfen pes etme, sen harika birisin!", "* Ralsei sana sarılıyor."]
+    },
+    { 
+        id: 'susie', name: 'Susie', 
+        img: 'https://i.ibb.co/YyYh4x0/susie.jpg', 
+        intro: "Vahşi ve durdurulamaz. Birinin telefonunda 'Knight'ı (Şövalye) görmesi onu çileden çıkarıyor.",
+        responses: ["Ne bakıyorsun?!", "Eğer bunu başkasına söylersen seni ısırırım.", "Kavga mı istiyorsun yoksa sadece canın mı sıkıldı?", "Heh, fena değilmişsin."]
+    }
+];
+
+// Açılış Animasyonu
+const introLines = [
+    "ÇOK İLGİNÇ.",
+    "BİR SONRAKİ DENEYE HAZIR MISIN?",
+    "ONLARLA BAĞLANTI KURACAKSIN.",
+    "AMA UNUTMA...",
+    "BU DÜNYADA SEÇİMLERİNİN BİR ÖNEMİ YOK."
+];
+
+let lineIdx = 0;
+function typeIntro() {
+    if(lineIdx < introLines.length) {
+        document.getElementById('introText').innerText = introLines[lineIdx];
+        lineIdx++;
+        setTimeout(typeIntro, 2000);
+    }
+}
+typeIntro();
+
+function startGame() {
+    const nameInput = document.getElementById('playerName').value;
+    if(nameInput) userName = nameInput.toUpperCase();
+    document.getElementById('display-name').innerText = userName;
+    
+    document.getElementById('intro-screen').style.opacity = "0";
+    setTimeout(() => {
+        document.getElementById('intro-screen').style.display = "none";
+        document.getElementById('game-container').style.display = "flex";
+        renderCharacters();
+    }, 1000);
+}
+
+function renderCharacters() {
+    const container = document.getElementById('select-screen');
+    container.innerHTML = characters.map((c, i) => `
+        <div class="char-card" onclick="selectPartner(${i})">
+            <img src="${c.img}">
+            <div class="char-info">
+                <b style="color:yellow">${c.name}</b>
+                <p style="font-size:0.6rem; margin:5px 0;">${c.intro}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectPartner(index) {
+    currentPartner = characters[index];
+    document.getElementById('select-screen').style.display = "none";
+    document.getElementById('play-screen').style.display = "flex";
+    
+    addMessage(`* ${currentPartner.name} ile karanlık bir bağ kuruldu.`, 'bot');
+    if(currentPartner.id === 'ralsei') {
+        addMessage("Hey orada, ekranın arkasındaki kişi. Yalnız hissetmenin ne olduğunu biliyorum. Korkutucu... Ama bil ki, ne olursa olsun senin yanındayım!", 'bot');
+    }
+}
+
+function addMessage(text, type, photoUrl = null) {
+    const win = document.getElementById('chat-window');
+    const div = document.createElement('div');
+    div.className = `msg ${type}`;
+    
+    let content = `<div>${text}</div>`;
+    if(photoUrl) {
+        content += `<div class="photo-frame"><img src="${photoUrl}"></div>`;
+    }
+    
+    div.innerHTML = content;
+    win.appendChild(div);
+    win.scrollTop = win.scrollHeight;
+}
+
+function sendMessage() {
+    const input = document.getElementById('userInput');
+    const val = input.value;
+    if(!val) return;
+
+    addMessage(val, 'user');
+    input.value = "";
+
+    setTimeout(() => {
+        const randRes = currentPartner.responses[Math.floor(Math.random() * currentPartner.responses.length)];
+        addMessage(randRes, 'bot');
+    }, 800);
+}
+
+function quickAction(action) {
+    addMessage(`* (${action} eylemi gerçekleştiriliyor...)`, 'user');
+    setTimeout(() => {
+        if(action === 'HAYRANLIK') addMessage(`* ${currentPartner.name} hafifçe kızardı.`, 'bot');
+        if(action === 'DOKUN') addMessage(`* Sıcak bir temas hissettin.`, 'bot');
+    }, 600);
+}
+
+function requestPhoto() {
+    addMessage("* Fotoğraf yükleniyor...", "bot");
+    setTimeout(() => {
+        // Karakterin ID'sine göre ilgili fotoğrafı basıyoruz
+        let pUrl = currentPartner.img; 
+        addMessage(`* ${currentPartner.name} sana bir anısını gönderdi:`, "bot", pUrl);
+    }, 1200);
+}
+</script>
+</body>
+</html>
