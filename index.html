@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ROARING SINS | AI ULTIMATE</title>
+    <style>
+        @font-face { font-family: 'Pixel'; src: url('https://fonts.cdnfonts.com/s/16218/DeterminationMonoWeb.woff') format('woff'); }
+        :root { --soul: #ff0000; --bg: #000; --border: #ffffff; --gold: #ffd700; }
+        
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: white; font-family: 'Pixel', sans-serif; overflow: hidden; }
+        
+        /* SEÇİM EKRANI */
+        #game-container { display: flex; height: 100vh; flex-direction: column; }
+        #select-screen { 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+            gap: 12px; background: #080808; 
+        }
+
+        .char-card { 
+            border: 2px solid #333; border-radius: 4px; overflow: hidden; 
+            cursor: pointer; transition: 0.2s; background: #111; 
+        }
+        .char-card:hover { border-color: var(--soul); transform: scale(1.05); }
+        .char-card .img-container { width: 100%; height: 110px; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+        .char-card img { max-width: 90%; max-height: 90%; image-rendering: pixelated; }
+        
+        /* RESİM DEĞİŞTİRME BUTONU */
+        .img-edit { position: absolute; top: 2px; right: 2px; background: rgba(255,0,0,0.7); font-size: 10px; padding: 2px; border-radius: 2px; display:none; }
+        .char-card:hover .img-edit { display: block; }
+
+        /* CHAT EKRANI */
+        #play-screen { display: none; flex: 1; flex-direction: column; position: relative; background-size: cover; background-position: center; }
+        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 1; }
+        
+        #chat-window { position: relative; z-index: 2; flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 85%; padding: 15px; border: 2px solid #fff; position: relative; animation: textReveal 0.3s; background: rgba(0,0,0,0.85); line-height: 1.5; }
+        .bot { align-self: flex-start; border-left: 5px solid var(--gold); color: #fff; }
+        .user { align-self: flex-end; border-right: 5px solid var(--soul); color: #eee; }
+
+        .control-panel { position: relative; z-index: 2; padding: 15px; background: #000; border-top: 3px solid #fff; }
+        .input-row { display: flex; gap: 10px; }
+        input { flex: 1; background: #000; border: 2px solid #fff; color: white; padding: 12px; font-family: 'Pixel'; font-size: 1rem; outline: none; }
+        .btn { border: 2px solid #fff; background: #000; color: #fff; font-family: 'Pixel'; cursor: pointer; padding: 5px 20px; transition: 0.2s; }
+        .btn:hover { background: #fff; color: #000; }
+
+        @keyframes textReveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="status-bar" style="padding:10px; border-bottom:2px solid #333; display:flex; justify-content:space-between; align-items:center;">
+        <span id="char-tag" style="color:var(--gold);">KARAKTER SEÇİLMEDİ</span>
+        <div style="display:flex; gap:10px;">
+            <button class="btn" style="font-size:0.6rem;" onclick="changeCharImg()">RESİM YÜKLE</button>
+            <button class="btn" style="font-size:0.6rem;" onclick="location.reload()">SİSTEMİ SIFIRLA</button>
+        </div>
+    </div>
+    
+    <div id="select-screen"></div>
+
+    <div id="play-screen">
+        <div id="overlay"></div>
+        <div id="chat-window"></div>
+        <div class="control-panel">
+            <div class="input-row">
+                <input type="text" id="userInput" placeholder="AI ile iletişime geç..." onkeypress="if(event.key==='Enter') processAI()">
+                <button class="btn" onclick="processAI()">AKTART</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// GENİŞLETİLMİŞ BİLGİ TABANI (KNOWLEDGE BASE)
+const AI_KNOWLEDGE = {
+    terms: ["soul", "determination", "dark world", "lightner", "fountain", "knight", "gaster", "reset", "genocide", "pacifist"],
+    slang: { "asap": "hemen", "lol": "komik", "brb": "döneceğim", "btw": "bu arada", "idk": "bilmiyorum" }
+};
+
+const charData = [
+    { n: "Kris", i: "https://www.spriters-resource.com/resources/sheets/110/112930.png", bg: "https://i.ibb.co/L6S9f3F/darkworld.png", style: "Sessiz, kısa ve gizemli cümleler.", key: "dark" },
+    { n: "Ralsei", i: "https://utdr.wiki/images/thumb/e/e0/Ralsei_Talking_Sprite.gif/120px-Ralsei_Talking_Sprite.gif", bg: "https://i.ibb.co/M738S6B/castle.png", style: "Nazik, kibar, sevgi dolu.", key: "prince" },
+    { n: "Susie", i: "https://utdr.wiki/images/thumb/e/eb/Susie_Talking_Sprite.gif/120px-Susie_Talking_Sprite.gif", bg: "https://i.ibb.co/YyYh4x0/forest.png", style: "Sert, kaba ama dürüst.", key: "tough" },
+    { n: "Noelle", i: "https://utdr.wiki/images/thumb/d/d7/Noelle_Holiday_Talking_Sprite.gif/120px-Noelle_Holiday_Talking_Sprite.gif", bg: "https://i.ibb.co/YyYh4x0/forest.png", style: "Çekingen, zeki, heyecanlı.", key: "ice" },
+    { n: "Sans", i: "https://utdr.wiki/images/thumb/0/01/Sans_Talking_Sprite.gif/120px-Sans_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/34/06/17/34061737e40b36873919e8759600a747.gif", style: "Tembel, şakacı, alt seviye harf kullanımı.", key: "judge" },
+    { n: "Papyrus", i: "https://utdr.wiki/images/thumb/c/ca/Papyrus_Talking_Sprite.gif/120px-Papyrus_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/34/06/17/34061737e40b36873919e8759600a747.gif", style: "BÜYÜK HARFLERLE KONUŞUR, COŞKULU.", key: "cool" },
+    { n: "Spamton", i: "https://utdr.wiki/images/thumb/1/1c/Spamton_Talking_Sprite.gif/120px-Spamton_Talking_Sprite.gif", bg: "https://vignette.wikia.nocookie.net/undertale/images/d/d4/Lab.png", style: "[Büyük] reklam tarzı, kesik cümleler.", key: "deal" },
+    { n: "Toriel", i: "https://utdr.wiki/images/thumb/7/7e/Toriel_Talking_Sprite.gif/120px-Toriel_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/70/43/72/7043729e92753a813c9e900995167f63.gif", style: "Anne şefkati, korumacı.", key: "mother" },
+    { n: "Asriel", i: "https://utdr.wiki/images/thumb/6/63/Asriel_Dreemurr_Talking_Sprite.gif/120px-Asriel_Dreemurr_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/16/9c/68/169c6806540307399f9df395d8883654.gif", style: "Duygusal, pişman, umutlu.", key: "prince" },
+    { n: "Chara", i: "https://utdr.wiki/images/thumb/4/4e/Chara_Talking_Sprite.gif/120px-Chara_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/70/43/72/7043729e92753a813c9e900995167f63.gif", style: "Soğuk, mantıklı, ürpertici.", key: "demon" },
+    { n: "Frisk", i: "https://utdr.wiki/images/thumb/d/d3/Frisk_Talking_Sprite.gif/120px-Frisk_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/70/43/72/7043729e92753a813c9e900995167f63.gif", style: "Sadece eylemlerle yanıt verir.", key: "human" },
+    { n: "Undyne", i: "https://utdr.wiki/images/thumb/0/08/Undyne_Talking_Sprite.gif/120px-Undyne_Talking_Sprite.gif", bg: "https://vignette.wikia.nocookie.net/undertale/images/d/d4/Lab.png", style: "Agresif, kahramanvari, enerjik.", key: "hero" },
+    { n: "Alphys", i: "https://utdr.wiki/images/thumb/6/69/Alphys_Talking_Sprite.gif/120px-Alphys_Talking_Sprite.gif", bg: "https://vignette.wikia.nocookie.net/undertale/images/d/d4/Lab.png", style: "Kekeme, teknik terimler kullanan.", key: "nerd" },
+    { n: "Mettaton", i: "https://utdr.wiki/images/thumb/d/db/Mettaton_EX_Talking_Sprite.gif/120px-Mettaton_EX_Talking_Sprite.gif", bg: "https://vignette.wikia.nocookie.net/undertale/images/d/d4/Lab.png", style: "Narsist, dramatik, gösterişli.", key: "star" },
+    { n: "Rouxls Kaard", i: "https://utdr.wiki/images/thumb/7/7b/Rouxls_Kaard_Talking_Sprite.gif/120px-Rouxls_Kaard_Talking_Sprite.gif", bg: "https://i.ibb.co/L6S9f3F/darkworld.png", style: "Eski İngilizce (eth ekleri), sahte asalet.", key: "puzzle" },
+    { n: "Lancer", i: "https://utdr.wiki/images/thumb/1/15/Lancer_Talking_Sprite.gif/120px-Lancer_Talking_Sprite.gif", bg: "https://i.ibb.co/L6S9f3F/darkworld.png", style: "Çocuksu, yaramaz, komik.", key: "boy" },
+    { n: "Berdly", i: "https://utdr.wiki/images/thumb/2/2f/Berdly_Talking_Sprite.gif/120px-Berdly_Talking_Sprite.gif", bg: "https://i.ibb.co/L6S9f3F/darkworld.png", style: "Kibirli, 'bilmiş' tavırlar.", key: "gamer" },
+    { n: "Queen", i: "https://utdr.wiki/images/thumb/5/5f/Queen_Talking_Sprite.gif/120px-Queen_Talking_Sprite.gif", bg: "https://i.ibb.co/L6S9f3F/darkworld.png", style: "Robotik, mantıklı ama absürt.", key: "boss" },
+    { n: "Asgore", i: "https://utdr.wiki/images/thumb/a/a2/Asgore_Talking_Sprite.gif/120px-Asgore_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/16/9c/68/169c6806540307399f9df395d8883654.gif", style: "Ağırbaşlı, üzgün, misafirperver.", key: "king" },
+    { n: "Flowey", i: "https://utdr.wiki/images/thumb/8/83/Flowey_Talking_Sprite.gif/120px-Flowey_Talking_Sprite.gif", bg: "https://i.pinimg.com/originals/70/43/72/7043729e92753a813c9e900995167f63.gif", style: "Psikopatça, manipülatif.", key: "flower" }
+];
+
+let selectedChar = null;
+
+// KARAKTER RESMİNİ DEĞİŞTİRME FONKSİYONU
+function changeCharImg() {
+    const url = prompt("Yeni resim URL'sini girin veya dosya yolu belirtin:");
+    if(url && selectedChar) {
+        selectedChar.i = url;
+        alert("Resim güncellendi. Menüye dönüp tekrar seçerek görebilirsin.");
+        renderChars();
+    } else if(!selectedChar) {
+        alert("Önce bir karakter seçmelisin!");
+    }
+}
+
+function renderChars() {
+    const screen = document.getElementById('select-screen');
+    screen.innerHTML = "";
+    charData.forEach((c, idx) => {
+        const card = document.createElement('div');
+        card.className = 'char-card';
+        card.onclick = () => selectChar(idx);
+        card.innerHTML = `<div class="img-container"><img src="${c.i}"><div class="img-edit">DÜZENLE</div></div><div class="char-name">${c.n}</div>`;
+        screen.appendChild(card);
+    });
+}
+renderChars();
+
+function selectChar(idx) {
+    selectedChar = charData[idx];
+    const playScreen = document.getElementById('play-screen');
+    playScreen.style.backgroundImage = `url('${selectedChar.bg}')`;
+    document.getElementById('select-screen').style.display = 'none';
+    playScreen.style.display = 'flex';
+    document.getElementById('char-tag').innerText = `BAĞLANTI: ${selectedChar.n.toUpperCase()}`;
+    addMsg(`* ${selectedChar.n} ile bilinç bağı kuruldu. Sistem hazır.`, 'bot');
+}
+
+function addMsg(txt, type) {
+    const win = document.getElementById('chat-window');
+    const div = document.createElement('div');
+    div.className = `msg ${type}`;
+    div.innerText = txt;
+    win.appendChild(div);
+    win.scrollTop = win.scrollHeight;
+}
+
+// PROFESYONEL AI İŞLEME MOTORU
+function processAI() {
+    const input = document.getElementById('userInput');
+    let msg = input.value.trim();
+    if(!msg) return;
+
+    addMsg(msg, 'user');
+    input.value = "";
+
+    setTimeout(() => {
+        let response = generateResponse(msg.toLowerCase(), selectedChar);
+        addMsg(response, 'bot');
+    }, 600);
+}
+
+function generateResponse(msg, char) {
+    const n = char.n;
+    
+    // 1. Terim Kontrolü
+    if(msg.includes("gaster")) return (n === "Sans") ? "o isimden bahsetmesek daha iyi dostum." : "* Dosyalarda bir hata oluştu... ██████";
+    if(msg.includes("soul") || msg.includes("ruh")) return `* ${n} senin ruhunun parıltısını hissediyor.`;
+
+    // 2. Kısaltma Çözücü
+    for(let s in AI_KNOWLEDGE.slang) {
+        if(msg.includes(s)) msg = msg.replace(s, AI_KNOWLEDGE.slang[s]);
+    }
+
+    // 3. Karakter Kişilik Motoru
+    if(msg.includes("nasılsın") || msg.includes("nbr")) {
+        switch(n) {
+            case "Sans": return "her zamanki gibi. kemiklerim sızlıyor ama iyidir.";
+            case "Papyrus": return "HARİKA HİSSEDİYORUM İNSAN! BUGÜN EĞİTİMİM ÇOK VERİMLİYDİ!";
+            case "Spamton": return "HER ZAMANKİNDEN DAHA [Büyük]! SADECE 4.99 [Kromer] KARŞILIĞINDA DAHA İYİ OLABİLİRİM!";
+            case "Susie": return "Sana ne? Ama... fena değilim sanırım.";
+            case "Ralsei": return "Seninle konuştuğum için çok mutluyum, teşekkür ederim!";
+            default: return "İyiyim, sorduğun için teşekkürler.";
+        }
+    }
+
+    if(msg.includes("kimsin") || msg.includes("adın ne")) {
+        return `Ben ${n}. ${char.style}`;
+    }
+
+    // 4. Genel Akıllı Yanıtlar (Fallbacks)
+    const thoughts = [
+        `* ${n} senin bu dediğini not etti.`,
+        "Bunu daha derinlemesine konuşmalıyız.",
+        "İlginç bir perspektif. Evrenin kuralları bunu destekliyor mu?",
+        "* (Sessizce seni dinliyor ve bir şeyler düşünüyor.)"
+    ];
+    return thoughts[Math.floor(Math.random() * thoughts.length)];
+}
+</script>
+</body>
+</html>
