@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ROARING SINS | OMNI-VISION 100</title>
+    <style>
+        @font-face { font-family: 'Pixel'; src: url('https://fonts.cdnfonts.com/s/16218/DeterminationMonoWeb.woff') format('woff'); }
+        :root { --soul: #ff0000; --bg: #000; --gold: #ffd700; --pink: #ff69b4; }
+        
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg); color: white; font-family: 'Pixel', sans-serif; overflow: hidden; }
+        
+        /* GİRİŞ EKRANI */
+        #intro-screen { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        #story-box { border: 4px solid #fff; background: #000; padding: 25px; width: 90%; max-width: 600px; height: 400px; display: flex; flex-direction: column; box-sizing: border-box; position: relative; }
+        #intro-text { flex: 1; font-size: 1.1rem; line-height: 2; overflow-y: auto; white-space: pre-wrap; }
+
+        /* ANA OYUN */
+        #game-container { display: none; height: 100vh; flex-direction: column; }
+        #select-screen { flex: 1; overflow-y: auto; padding: 10px; background: #050505; }
+        .char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding-bottom: 30px; }
+        
+        .char-card { border: 3px solid #444; background: #111; display: flex; align-items: center; height: 80px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .char-card:active { transform: scale(0.95); border-color: var(--soul); }
+        .char-card img { width: 70px; height: 70px; object-fit: contain; image-rendering: pixelated; margin: 0 15px; background: #000; border: 1px solid #333; }
+        .char-info { display: flex; flex-direction: column; }
+        .char-name { font-size: 1rem; font-weight: bold; }
+        .char-origin { font-size: 0.6rem; color: #888; }
+
+        /* OYUN EKRANI */
+        #play-screen { display: none; flex: 1; flex-direction: column; overflow: hidden; position: relative; background-size: cover; background-position: center; }
+        #char-header { height: 130px; border-bottom: 3px solid #fff; display: flex; align-items: center; justify-content: center; background: #000; overflow: hidden; position: relative; }
+        #char-header img { height: 110px; border: 2px solid #fff; image-rendering: pixelated; background: rgba(0,0,0,0.5); z-index: 2; }
+        
+        #chat-window { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.7); }
+        .msg { max-width: 85%; padding: 12px; border: 2px solid #fff; font-size: 0.85rem; border-radius: 8px; backdrop-filter: blur(2px); }
+        .bot { align-self: flex-start; border-left: 6px solid var(--gold); background: rgba(30,30,30,0.85); }
+        .user { align-self: flex-end; border-right: 6px solid var(--soul); background: rgba(60,0,0,0.85); }
+
+        /* KONTROL PANELİ */
+        .control-panel { padding: 8px; background: #000; border-top: 2px solid #fff; height: 240px; box-sizing: border-box; z-index: 5; }
+        .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+        .btn { border: 2px solid #fff; background: #000; color: #fff; font-family: 'Pixel'; padding: 10px 0; font-size: 0.55rem; cursor: pointer; }
+        .btn:active { background: #fff; color: #000; }
+
+        /* SEÇENEK MENÜSÜ */
+        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 20000; flex-direction: column; align-items: center; justify-content: center; }
+        #modal-opts { width: 90%; max-height: 65vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .opt-rect { width: 100%; padding: 18px; border: 2px solid #fff; background: #000; color: #fff; font-family: 'Pixel'; cursor: pointer; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div id="intro-screen">
+    <div id="story-box"><div id="intro-text"></div><button onclick="startGame()" style="position:absolute; bottom:10px; right:10px; color:red; background:none; border:none; font-family:'Pixel'; cursor:pointer;">ATLA (X)</button></div>
+    <button id="next-line-btn" class="btn" style="width:200px; margin-top:10px;" onclick="showNextLine()">SIRADAKİ (Z)</button>
+</div>
+
+<div id="modal">
+    <h2 style="color:var(--gold); margin-bottom: 10px;">SEÇİMLER</h2>
+    <div id="modal-opts"></div>
+    <button class="btn" style="margin-top:20px; width:150px;" onclick="closeModal()">KAPAT</button>
+</div>
+
+<div id="game-container">
+    <div style="padding:8px; display:flex; justify-content:space-between; border-bottom:1px solid #333; background:#000; z-index:10;">
+        <span style="color:var(--soul); font-size:0.8rem;">ROARING SINS | OMNI-VISION</span>
+        <button class="btn" style="padding:2px 10px;" onclick="goBack()">LOBİYE DÖN</button>
+    </div>
+    <div id="select-screen"><div id="grid" class="char-grid"></div></div>
+    <div id="play-screen">
+        <div id="char-header"><img id="current-char-img" src="" alt=""></div>
+        <div id="chat-window"></div>
+        <div class="control-panel">
+            <input type="text" id="u-in" placeholder="Bir şeyler yaz..." style="width:95%; background:#000; color:#fff; border:1px solid #fff; padding:10px; font-family:'Pixel'; margin-bottom:5px;">
+            <div class="action-grid">
+                <button class="btn" onclick="openMenu('ACT')">ACT</button>
+                <button class="btn" onclick="openMenu('HATE')">HATE</button>
+                <button class="btn" onclick="sendMsg()">GÖNDER</button>
+                <button class="btn" onclick="openMenu('EXTRA')">EXTRA ACT</button>
+                <button class="btn" onclick="openGoogleSearch(false)">FOTO İSTE</button>
+                <button class="btn" onclick="openGoogleSearch(true)" style="color:var(--pink);">+18 FOTO</button>
+                <button class="btn" id="marry-btn" onclick="tryMarry()" style="color:var(--gold); grid-column: span 3; font-size:0.8rem;">❤ SEVGİLİ OL ❤</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===========================================================
+   OMNI-VISION: DINAMIK RESIM YANSITMA MOTORU (v4.0)
+   =========================================================== */
+const ImageEngine = {
+    providers: {
+        staticRoot: "https://raw.githubusercontent.com/Mete13217-crypto/Deltaflirt/main/",
+        unsplash: "https://source.unsplash.com/featured/?"
+    },
+    getKeywords(charName) {
+        const tags = {
+            "Toriel": "undertale+toriel+mother",
+            "Sans": "undertale+sans+skeleton",
+            "Papyrus": "undertale+papyrus",
+            "Undyne": "undertale+undyne",
+            "Alphys": "undertale+alphys",
+            "Kris": "deltarune+kris",
+            "Susie": "deltarune+susie",
+            "Ralsei": "deltarune+ralsei",
+            "Noelle": "deltarune+noelle",
+            "Queen": "deltarune+queen",
+            "Martlet": "undertale+yellow+martlet",
+            "Ceroba": "undertale+yellow+ceroba"
+        };
+        return tags[charName] || charName.toLowerCase() + "+undertale+deltarune";
+    },
+    async reflect(char) {
+        const query = this.getKeywords(char.n);
+        const avatarImg = document.getElementById('current-char-img');
+        const headerBox = document.getElementById('char-header');
+        const playScreen = document.getElementById('play-screen');
+
+        // URL Belirleme
+        const avatarURL = this.providers.staticRoot + char.i;
+        const bannerURL = `https://source.unsplash.com/1200x400/?${query},dark,art`;
+        const bgURL = `https://source.unsplash.com/1600x900/?${query},background,dark`;
+
+        // Uygulama
+        this.applyStyle(avatarImg, avatarURL, true);
+        this.applyStyle(headerBox, bannerURL, false);
+        this.applyStyle(playScreen, bgURL, false, true);
+    },
+    applyStyle(el, url, isImg, isBg = false) {
+        if (!el) return;
+        el.style.transition = "opacity 0.5s ease-in-out";
+        el.style.opacity = "0.3";
+        if (isImg) {
+            el.src = url;
+            el.onerror = () => { el.src = `https://ui-avatars.com/api/?name=${url}&background=333&color=fff`; };
+        } else if (isBg) {
+            el.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('${url}')`;
+        } else {
+            el.style.background = `url('${url}') center/cover no-repeat`;
+        }
+        setTimeout(() => { el.style.opacity = "1"; }, 300);
+    }
+};
+
+/* ===========================================================
+   OYUN MOTORU VE KARAKTERLER
+   =========================================================== */
+const story = [
+    "Uzun Zamanlar Önce 2 ırk arasında savaş çıkageldi...",
+    "Canavarlar çok güçsüz olduğu için kaybettiler.",
+    "Bariyeri yıkmanın tek yolu 7 insan ruhu idi.",
+    "Frisk düştüğünde her şey değişti...",
+    "Ama Knight sistemi bozdu ve OMNIVERSE'i açtı!",
+    "100 farklı ruh, tek bir amaç: FLÖRT!"
+];
+
+const charList = [
+    { n: "Toriel", o: "Undertale", c: "#fff", t: "nazik", i: "1000006051.jpg" },
+    { n: "Sans", o: "Undertale", c: "#00f", t: "kaba", i: "sans.png" },
+    { n: "Papyrus", o: "Undertale", c: "#f00", t: "nazik", i: "1000006055.jpg" },
+    { n: "Undyne", o: "Undertale", c: "#f00", t: "kaba", i: "1000006056.jpg" },
+    { n: "Alphys", o: "Undertale", c: "#ff0", t: "nazik", i: "1000006057.jpg" },
+    { n: "Kris", o: "Deltarune", c: "#0ff", t: "kaba", i: "kris.png" },
+    { n: "Susie", o: "Deltarune", c: "#808", t: "kaba", i: "susie.png" },
+    { n: "Ralsei", o: "Deltarune", c: "#0f0", t: "nazik", i: "1000006059.jpg" },
+    { n: "Noelle", o: "Deltarune", c: "#ff0", t: "nazik", i: "1000006049.jpg" },
+    { n: "Queen", o: "Deltarune", c: "#0cf", t: "kaba", i: "1000006061.jpg" },
+    { n: "Martlet", o: "UT Yellow", c: "#0ff", t: "nazik", i: "martlet.png" },
+    { n: "Ceroba", o: "UT Yellow", c: "#f80", t: "kaba", i: "ceroba.png" },
+    { n: "Tenna", o: "Deltarune Fan", c: "#444", t: "kaba", i: "tenna.png" },
+    { n: "Tasque Manager", o: "Deltarune", c: "#e6f", t: "kaba", i: "tasque.png" }
+];
+
+for(let i=charList.length; i<100; i++) {
+    charList.push({ n: "Karakter "+i, o: "Omniverse", c: "#555", t: i%2===0?"nazik":"kaba", i: "missing.png" });
+}
+
+let curL = 0, typing = false, sel = null, isMarried = false, love = 10;
+
+function showNextLine() {
+    if(typing) return;
+    if(curL >= story.length) { startGame(); return; }
+    typing = true;
+    let target = document.getElementById('intro-text');
+    target.innerText = ""; let txt = story[curL]; let j = 0;
+    function write() {
+        if(j < txt.length) { target.innerText += txt[j++]; setTimeout(write, 30); }
+        else { typing = false; curL++; if(curL >= story.length) document.getElementById('next-line-btn').innerText = "BAŞLAT (Z)"; }
+    }
+    write();
+}
+
+function startGame() {
+    document.getElementById('intro-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'flex';
+    const g = document.getElementById('grid'); g.innerHTML = "";
+    charList.forEach((c, idx) => {
+        g.innerHTML += `<div class="char-card" style="border-color:${c.c}" onclick="selectChar(${idx})"><img src="https://raw.githubusercontent.com/Mete13217-crypto/Deltaflirt/main/${c.i}" onerror="this.src='https://ui-avatars.com/api/?name=${c.n}&background=333&color=fff'"><div class="char-info"><span class="char-name">${c.n}</span><span class="char-origin">${c.o}</span></div></div>`;
+    });
+}
+
+function selectChar(idx) {
+    sel = charList[idx]; isMarried = false; love = 10;
+    document.getElementById('select-screen').style.display = 'none';
+    document.getElementById('play-screen').style.display = 'flex';
+    
+    // OMNI-VISION TETİKLEME
+    ImageEngine.reflect(sel);
+    
+    document.getElementById('chat-window').innerHTML = "";
+    addMsg(`* ${sel.n} ile karşılaştın.`, 'bot');
+}
+
+function openMenu(m) {
+    const modal = document.getElementById('modal');
+    const opts = document.getElementById('modal-opts');
+    modal.style.display = "flex"; opts.innerHTML = "";
+    let items = [];
+    if(m === 'ACT') items = ["Sohbet", "Dokun", "Öp", "Flört"];
+    else if(m === 'HATE') items = ["Küfür", "Vur", "Hakaret"];
+    else if(m === 'EXTRA') {
+        if(!isMarried) {
+            let msg = sel.t === "kaba" ? "Oww hayır seni küçük azgın velet işim olmaz!" : "Bu teklif çok sapıkça, kabul edemem!";
+            addMsg(`* ${sel.n}: "${msg}"`, 'bot'); closeModal(); return;
+        }
+        items = ["Parmaklama", "Sokma", "Ağzına Alma", "Anal Seks", "Meme Sıkma", "Ayakta Sikiş", "Oturarak Sikiş"];
+    }
+    items.forEach(it => {
+        opts.innerHTML += `<button class="opt-rect" onclick="doAction('${m}', '${it}')">${it}</button>`;
+    });
+}
+
+function doAction(m, it) {
+    closeModal(); addMsg(`* (${it})`, 'user');
+    let r = ""; const isK = sel.t === "kaba";
+
+    if(it === "Dokun") {
+        if(isMarried) r = "bu eller dokunmak için değil göte şaplak için";
+        else r = isK ? "brr bu ellerde ne böyle bana dokunmak içinmi hrrrrr... çok tatlısın şimdi gözüme girdin" : "bu eller çok nazik iyiki varsın bebeğim";
+    } else if(it === "Öp") {
+        r = isK ? "mmmm ağzın çöplük kokuyor ama yinede sevdim bu kokuyu" : "ağzının tadı çok güzeldi *bidaha öper* bu tadı hep istiyorum aşkımmm";
+    } else if(it === "Sohbet") {
+        const ai = isK ? ["Ne istiyorsun?", "Zamanımı harcama.", "Hadi sadede gel."] : ["Seninle olmak güzel.", "Nelerden bahsedelim?", "Çok naziksin."];
+        r = ai[Math.floor(Math.random()*ai.length)];
+    } else if(it === "Parmaklama") r = isK ? "evet işte bu be bebeğim daha hızlı dahada hızlı nolur daha fazla hız" : "oh evet o parmağını vajinamda hissetmek istiyorum";
+    else if(it === "Sokma") r = isK ? "evet sen yılan ben ise bir günahkarım beni cezalandır ohhh" : "ohh tam deliğine bebeğim";
+    else if(it === "Ağzına Alma") r = isK ? "(gok gok gok) (çıkarma sesi)aww işte haz dediğin budur bebeğim" : "(gok gok gok) (çıkarma sesi) aww işte seninle olmak bir harika bu alet çok işr yarıyor";
+    else if(it === "Anal Seks") r = isK ? "sok benim götüme bu alet bunun için varoldu bu" : "ahh ahh yavaş sokki daha fazla haz alayım bebeğim";
+    else if(it === "Meme Sıkma") r = isK ? "ohh sık bu topları sıkki süt çıksın" : "sık bu büyüklükleri tatlım sık sen iyi hisset yeter bebeğim";
+    else if(it === "Ayakta Sikiş") r = isK ? "beni o lanet koltuktan uzak tutarak sik ah ah ah yess" : "beni bu koltuktan aldığın için sağol bebeğimmmmm ah ah ah ah ah";
+    else if(it === "Oturarak Sikiş") r = isK ? "beni o lanet duvardan uzak tut ah ah ah ah tam ortası tam ortası aferin ahbap" : "beni bu duvardan uzak tutarak sikki hazza haz katalım bebeğim";
+    else r = "İlginç...";
+
+    setTimeout(() => { addMsg(`* ${sel.n}: "${r}"`, 'bot'); love += 15; }, 700);
+}
+
+function addMsg(txt, side) {
+    const win = document.getElementById('chat-window');
+    win.innerHTML += `<div class="msg ${side}">${txt}</div>`;
+    win.scrollTop = win.scrollHeight;
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function goBack() { document.getElementById('play-screen').style.display = 'none'; document.getElementById('select-screen').style.display = 'block'; }
+function tryMarry() { if(love >= 40) { isMarried = true; addMsg("* Artık SEVGİLİSİNİZ!", "bot"); } else { addMsg("* Biraz daha ACT yapmalısın.", "bot"); } }
+
+function openGoogleSearch(nsfw) {
+    if(nsfw && !isMarried) { addMsg("* Önce sevgili ol!", "bot"); return; }
+    window.open(`https://www.google.com/search?tbm=isch&q=${sel.n}+${nsfw?'nsfw':'fanart'}`, '_blank');
+}
+
+function sendMsg() {
+    let inp = document.getElementById('u-in'); if(!inp.value.trim()) return;
+    addMsg(inp.value, 'user'); inp.value = "";
+    setTimeout(() => { addMsg(`* ${sel.n}: "Hımm..."`, 'bot'); }, 1000);
+}
+
+window.onload = () => { showNextLine(); };
+</script>
+</body>
+</html>
