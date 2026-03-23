@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>METE13217 MULTIVERSE HUB</title>
+    <style>
+        @font-face { font-family: 'Saiyan'; src: url('https://fonts.cdnfonts.com/s/14925/Saiyan-Sans.woff') format('woff'); }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            background: #000; color: #fff; 
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        /* Arka Plan Efekti */
+        .bg-overlay {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle, #1a0033 0%, #000 100%);
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        /* Hikaye Giriş Metni Animasyonu */
+        #intro-text {
+            text-align: center; max-width: 80%;
+            margin-bottom: 40px; line-height: 1.6;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            animation: fadeIn 3s ease-in;
+        }
+
+        .hub-title {
+            font-family: 'Saiyan', sans-serif;
+            font-size: 3.5rem;
+            color: #ff8c00;
+            text-shadow: 0 0 20px #ff4500, 3px 3px #000;
+            margin-bottom: 50px;
+            letter-spacing: 3px;
+            text-align: center;
+        }
+
+        .menu-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            width: 85%;
+            max-width: 450px;
+        }
+
+        /* Evren Butonları Tasarımı */
+        .universe-btn {
+            position: relative;
+            padding: 20px;
+            border: 2px solid #fff;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            overflow: hidden;
+            transition: 0.4s;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .universe-btn:hover {
+            transform: scale(1.05);
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 25px rgba(255,255,255,0.6);
+        }
+
+        /* Evren Özel Renkleri */
+        .btn-db { border-color: #ff8c00; box-shadow: inset 0 0 10px #ff8c00; }
+        .btn-naruto { border-color: #ff4500; box-shadow: inset 0 0 10px #ff4500; }
+        .btn-op { border-color: #1e90ff; box-shadow: inset 0 0 10px #1e90ff; }
+
+        .btn-db:hover { background: #ff8c00; color: #000; }
+        .btn-naruto:hover { background: #ff4500; color: #000; }
+        .btn-op:hover { background: #1e90ff; color: #000; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .footer {
+            position: fixed; bottom: 20px; font-size: 0.7rem; color: #444;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-overlay"></div>
+
+<div id="intro-text">
+    <p>Boyutlar arası bariyerler zayıflıyor...</p>
+    <p>Hangi gerçekliği mühürlemek istersin?</p>
+</div>
+
+<h1 class="hub-title">MULTIVERSE</h1>
+
+<div class="menu-container">
+    <button class="universe-btn btn-db" onclick="travel('https://mete13217-crypto.github.io/-ndex.html/')">
+        🐉 DRAGON BALL EVRENİ
+    </button>
+
+    <button class="universe-btn btn-naruto" onclick="travel('https://mete13217-crypto.github.io/Deltaflirt/')">
+        🍥 NARUTO EVRENİ
+    </button>
+
+    <button class="universe-btn btn-op" onclick="travel('https://mete13217-crypto.github.io/One-piece/')">
+        ☠️ ONE PIECE EVRENİ
+    </button>
+</div>
+
+<div class="footer">METE13217-CRYPTO PROTOCOL V4.0</div>
+
+<script>
+    function travel(url) {
+        // Geçiş efekti (Opsiyonel: Ses eklenebilir)
+        document.body.style.opacity = "0";
+        document.body.style.transition = "1s";
+        
+        setTimeout(() => {
+            window.location.href = url;
+        }, 800);
+    }
+
+    // İlk girişteki yazılar için ufak bir gecikme efekti
+    window.onload = () => {
+        console.log("Sistem aktif. Boyutlar yüklendi.");
+    };
+</script>
+
+</body>
+</html>
