@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>METE CORE HUB V2</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: #000; color: #fff;
+            font-family: 'Segoe UI', sans-serif; overflow: hidden;
+            transition: 0.3s;
+        }
+
+        /* ANA KONTEYNER */
+        .main-container {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100vh; gap: 15px;
+        }
+
+        .menu-btn {
+            width: 280px; padding: 16px;
+            background: #111; color: #fff;
+            border: 1px solid #fff; cursor: pointer;
+            font-weight: bold; text-transform: uppercase;
+            transition: 0.2s; border-radius: 4px;
+        }
+
+        .menu-btn:active { background: #444; transform: scale(0.95); }
+
+        /* SAĞ SEÇENEK ÇEKMECESİ (DRAWER) */
+        #side-drawer {
+            position: fixed; top: 0; right: -260px;
+            width: 220px; height: 100%;
+            background: #080808; border-left: 1px solid #fff;
+            padding: 40px 20px; display: flex;
+            flex-direction: column; gap: 15px;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 3000;
+        }
+
+        #side-drawer.active { right: 0; }
+
+        .drawer-btn {
+            padding: 12px; background: transparent;
+            color: #fff; border: 1px solid #333;
+            cursor: pointer; font-size: 0.85rem;
+            text-align: left;
+        }
+
+        /* ALTERNATİF EVRENLER PANELİ */
+        #alt-panel {
+            position: fixed; inset: 0;
+            background: #000; display: none;
+            flex-direction: column; align-items: center;
+            justify-content: center; gap: 10px;
+            z-index: 2000;
+        }
+
+        .options-trigger {
+            position: fixed; top: 20px; right: 20px;
+            background: #fff; color: #000;
+            padding: 10px 15px; font-weight: bold;
+            cursor: pointer; border: none; z-index: 500;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<button class="options-trigger" onclick="toggleDrawer()">SEÇENEKLER</button>
+
+<div id="side-drawer">
+    <h3 style="border-bottom: 1px solid #222; padding-bottom: 10px; letter-spacing: 2px;">MENÜ</h3>
+    <button class="drawer-btn" onclick="toggleLight()">🌓 AYDINLIK MOD</button>
+    <button class="drawer-btn" onclick="nav('https://ig.me/j/AbYiS1GmEDX4mcEN/')">📸 INSTAGRAM</button>
+    <button class="drawer-btn" style="color:#ff4444; border-color:#ff4444; margin-top:20px;" onclick="toggleDrawer()">✖ KAPAT</button>
+</div>
+
+<div class="main-container">
+    <h1 style="letter-spacing: 6px; margin-bottom: 20px; font-weight: 300;">CORE SYSTEM</h1>
+    
+    <button class="menu-btn" onclick="openAlt()">🚀 ALTERNATİF EVRENLER</button>
+    
+    <button class="menu-btn" style="border-color: #f1c40f; color: #f1c40f;" onclick="nav('https://mete13217-crypto.github.io/-ndex.html-/')">💖 DELTARUNE KIZLAR</button>
+    
+    <button class="menu-btn" style="border-color:#0088cc;" onclick="nav('https://t.me/+Zu1-BqdP2sNjZTE0')">✈️ TELEGRAM GRUBU</button>
+</div>
+
+<div id="alt-panel">
+    <h2 style="margin-bottom: 20px; letter-spacing: 3px;">EVREN SEÇİN</h2>
+    
+    <button class="menu-btn" onclick="nav('https://mete13217-crypto.github.io/-ndex.html/')">🐲 DRAGON BALL</button>
+    <button class="menu-btn" onclick="nav('https://mete13217-crypto.github.io/Deltaflirt/')">🍥 NARUTO</button>
+    <button class="menu-btn" onclick="nav('https://mete13217-crypto.github.io/One-piece/')">🏴‍☠️ ONE PIECE</button>
+    <button class="menu-btn" onclick="nav('https://mete13217-crypto.github.io/-ndex.html-xd/')">🎯 VALORANT</button>
+    <button class="menu-btn" onclick="nav('https://mete13217-crypto.github.io/Emojichat/')">✨ GENSHIN IMPACT</button>
+    
+    <button class="menu-btn" style="border-color:#555; margin-top:20px;" onclick="closeAlt()">⬅ GERİ DÖN</button>
+</div>
+
+<script>
+    // Navigasyon
+    function nav(url) { window.location.href = url; }
+
+    // Çekmece Kontrolü
+    function toggleDrawer() {
+        document.getElementById('side-drawer').classList.toggle('active');
+    }
+
+    // Alt Panel Kontrolü
+    function openAlt() { document.getElementById('alt-panel').style.display = 'flex'; }
+    function closeAlt() { document.getElementById('alt-panel').style.display = 'none'; }
+
+    // Aydınlık Mod
+    function toggleLight() {
+        const b = document.body;
+        if (b.style.filter === 'invert(1)') {
+            b.style.filter = 'invert(0)';
+            b.style.background = '#000';
+        } else {
+            b.style.filter = 'invert(1)';
+            b.style.background = '#fff';
+        }
+    }
+</script>
+
+</body>
+</html>
